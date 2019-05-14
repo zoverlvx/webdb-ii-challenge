@@ -58,19 +58,40 @@ router.post("/", (req, res) => {
 });
 
 router.put("/:id", (req, res) => {
+    const {name} = req.body;
+    if (!name || typeof name !== "string") {
+        handleRes(res, 400, {message: "Must provide a name value"})
+    }
+    if (typeof name === "string") {
+        db("zoos")
+          .where({id: req.params.id})
+          .update({name}, "id")
+          .then(count => {
+	      if (count > 0) {
+	          db("zoos")
+		    .where({id: req.params.id}).first()
+		    .then(zoo => handleRes(res, 200, {message: `Id ${zoo.id} has been updated`}));
+	      }
+	      if (count < 0) {
+	          handleRes(res, 404, {message: "Zoo not found"});
+	      }
+          }).catch(err => handleRes(res, 500, err))
+    }
+});
+
+router.delete("/:id", (req, res) => {
     db("zoos")
       .where({id: req.params.id})
-      .update(req.body, "id")
+      .del()
       .then(count => {
-	  if (count > 0) {
-	      db("zoos")
-		.where({id: req.params.id}).first()
-		.then(zoo => handleRes(res, 200, zoo))
+          if (count > 0) {
+	      res.status(204).end();
 	  }
 	  if (count < 0) {
-	      handleRes(res, 404, {message: "Zoo not found"})
+	      handleRes(res, 404, {message: "Zoo not found"});
 	  }
-      }).catch(err => handleRes(res, 500, err))
+      })
+      .catch(err => handleRes(res, 500, err));
 });
 
 module.exports = router;
