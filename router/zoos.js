@@ -57,4 +57,20 @@ router.post("/", (req, res) => {
     }
 });
 
+router.put("/:id", (req, res) => {
+    db("zoos")
+      .where({id: req.params.id})
+      .update(req.body, "id")
+      .then(count => {
+	  if (count > 0) {
+	      db("zoos")
+		.where({id: req.params.id}).first()
+		.then(zoo => handleRes(res, 200, zoo))
+	  }
+	  if (count < 0) {
+	      handleRes(res, 404, {message: "Zoo not found"})
+	  }
+      }).catch(err => handleRes(res, 500, err))
+});
+
 module.exports = router;
